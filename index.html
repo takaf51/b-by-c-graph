@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美容データ - ライングラフ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px 10px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .control-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 5px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .control-btn {
+                font-size: 12px;
+                padding: 8px 12px;
+                min-width: 70px;
+            }
+            
+            .chart-container {
+                padding: 15px 5px;
+            }
+            
+            #chart {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>美容データ トラッキング</h1>
+            <p style="font-size: 14px; color: #aaa; margin-top: 5px;">
+                ドラッグまたはスワイプで横スクロール
+            </p>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn active" onclick="showData('all')">全部表示</button>
+            <button class="control-btn" onclick="showData('v')">V点のみ</button>
+            <button class="control-btn" onclick="showData('d')">D点のみ</button>
+        </div>
+        
+        <div class="chart-container">
+            <div id="chart"></div>
+        </div>
+    </div>
+
+    <script>
+        // データ設定
+        const allData = {
+            dPoint: [244.7, 251.1, 248.5, 250.2, 255.3, 252.4],
+            vPoint: [74.1, 77.9, 80.3, 78.6, 79.6, 78.5],
+            wrinkles: [8849.0, 8495.9, 12064.0, 12727.5, 6200.7, 9336.0]
+        };
+        
+        // 日数を設定（データがない日も含めて表示）
+        const totalDays = 10;
+        
+        // X軸のカテゴリを生成
+        function generateDays(count) {
+            return Array.from({length: count}, (_, i) => `Day ${i + 1}`);
+        }
+        
+        // スクロール用の設定
+        function getVisibleRange() {
+            const isMobile = window.innerWidth <= 480;
+            const maxVisible = isMobile ? 5 : 7;
+            return totalDays > maxVisible ? maxVisible : totalDays;
+        }
+        
+        // データを指定された日数に合わせて調整
+        function adjustDataLength(data, targetLength) {
+            const result = [...data];
+            while (result.length < targetLength) {
+                result.push(null); // データがない日はnullで埋める
+            }
+            return result.slice(0, targetLength);
+        }
+        
+        let chart;
+        
+        // チャートの初期化
+        function initChart() {
+            const options = {
+                series: [
+                    {
+                        name: "フェイスライン（D点）",
+                        data: adjustDataLength(allData.dPoint, totalDays),
+                        color: '#00E396'
+                    },
+                    {
+                        name: "たるみ度合い（V点）",
+                        data: adjustDataLength(allData.vPoint, totalDays),
+                        color: '#FEB019'
+                    },
+                    {
+                        name: "ほうれい線",
+                        data: adjustDataLength(allData.wrinkles, totalDays),
+                        color: '#FF4560'
+                    }
+                ],
+                chart: {
+                    height: 400,
+                    type: 'line',
+                    background: 'transparent',
+                    toolbar: {
+                        show: false
+                    },
+                    zoom: {
+                        enabled: true,
+                        type: 'x',
+                        autoScaleYaxis: true
+                    },
+                    pan: {
+                        enabled: true,
+                        type: 'x'
+                    },
+                    events: {
+                        mounted: function(chartContext, config) {
+                            // 初期表示範囲を設定
+                            const visibleRange = getVisibleRange();
+                            if (totalDays > visibleRange) {
+                                chartContext.zoomX(0, visibleRange - 1);
+                            }
+                        }
+                    }
+                },
+                theme: {
+                    mode: 'dark'
+                },
+                dataLabels: {
+                    enabled: true,
+                    style: {
+                        colors: ['#fff']
+                    },
+                    background: {
+                        enabled: true,
+                        foreColor: '#000',
+                        borderRadius: 3,
+                        padding: 4,
+                        opacity: 0.8
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                grid: {
+                    borderColor: '#535A6C',
+                    strokeDashArray: 3
+                },
+                xaxis: {
+                    categories: generateDays(totalDays),
+                    labels: {
+                        style: {
+                            colors: '#fff'
+                        }
+                    }
+                },
+                yaxis: [
+                    {
+                        title: {
+                            text: 'D点・V点',
+                            style: {
+                                color: '#fff'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                colors: '#fff'
+                            }
+                        }
+                    },
+                    {
+                        opposite: true,
+                        title: {
+                            text: 'ほうれい線',
+                            style: {
+                                color: '#fff'
+                            }
+                        },
+                        labels: {
+                            style: {
+                                colors: '#fff'
+                            }
+                        }
+                    }
+                ],
+                legend: {
+                    labels: {
+                        colors: '#fff'
+                    },
+                    position: 'top',
+                    horizontalAlign: 'center'
+                },
+                markers: {
+                    size: 6,
+                    strokeWidth: 2,
+                    strokeColors: '#000',
+                    hover: {
+                        size: 8
+                    }
+                },
+                tooltip: {
+                    theme: 'dark',
+                    x: {
+                        show: true
+                    }
+                },
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            height: 350
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
+                        dataLabels: {
+                            enabled: false
+                        }
+                    }
+                }]
+            };
+            
+            chart = new ApexCharts(document.querySelector("#chart"), options);
+            chart.render();
+        }
+        
+        // データ表示切り替え
+        function showData(type) {
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            let newSeries = [];
+            
+            switch(type) {
+                case 'v':
+                    newSeries = [{
+                        name: "たるみ度合い（V点）",
+                        data: adjustDataLength(allData.vPoint, totalDays),
+                        color: '#FEB019'
+                    }];
+                    break;
+                case 'd':
+                    newSeries = [{
+                        name: "フェイスライン（D点）",
+                        data: adjustDataLength(allData.dPoint, totalDays),
+                        color: '#00E396'
+                    }];
+                    break;
+                case 'all':
+                default:
+                    newSeries = [
+                        {
+                            name: "フェイスライン（D点）",
+                            data: adjustDataLength(allData.dPoint, totalDays),
+                            color: '#00E396'
+                        },
+                        {
+                            name: "たるみ度合い（V点）",
+                            data: adjustDataLength(allData.vPoint, totalDays),
+                            color: '#FEB019'
+                        },
+                        {
+                            name: "ほうれい線",
+                            data: adjustDataLength(allData.wrinkles, totalDays),
+                            color: '#FF4560'
+                        }
+                    ];
+                    break;
+            }
+            
+            chart.updateSeries(newSeries);
+            
+            // データ切り替え後も初期表示範囲を適用
+            setTimeout(() => {
+                const visibleRange = getVisibleRange();
+                if (totalDays > visibleRange) {
+                    chart.zoomX(0, visibleRange - 1);
+                }
+            }, 100);
+        }
+        
+        // ページ読み込み時にチャートを初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+        });
+    </script>
+</body>
+</html>
