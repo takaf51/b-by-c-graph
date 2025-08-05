@@ -135,9 +135,9 @@
         // 日数を設定（データがない日も含めて表示）
         const totalDays = 10;
         
-        // X軸のカテゴリを生成
+        // X軸のカテゴリを生成（数字のみ）
         function generateDays(count) {
-            return Array.from({length: count}, (_, i) => `Day ${i + 1}`);
+            return Array.from({length: count}, (_, i) => i + 1);
         }
         
         // スクロール用の設定
@@ -193,15 +193,6 @@
                     pan: {
                         enabled: true,
                         type: 'x'
-                    },
-                    events: {
-                        mounted: function(chartContext, config) {
-                            // 初期表示範囲を設定
-                            const visibleRange = getVisibleRange();
-                            if (totalDays > visibleRange) {
-                                chartContext.zoomX(0, visibleRange - 1);
-                            }
-                        }
                     }
                 },
                 theme: {
@@ -230,11 +221,21 @@
                 },
                 xaxis: {
                     categories: generateDays(totalDays),
+                    title: {
+                        text: 'Day',
+                        style: {
+                            color: '#fff',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }
+                    },
                     labels: {
                         style: {
                             colors: '#fff'
                         }
-                    }
+                    },
+                    min: 0,
+                    max: getVisibleRange() - 1
                 },
                 yaxis: [
                     {
@@ -297,6 +298,18 @@
                         },
                         dataLabels: {
                             enabled: false
+                        },
+                        xaxis: {
+                            min: 0,
+                            max: 4,  // モバイルでは5日分表示 (0-4)
+                            title: {
+                                text: 'Day',
+                                style: {
+                                    color: '#fff',
+                                    fontSize: '12px',
+                                    fontWeight: 500
+                                }
+                            }
                         }
                     }
                 }]
@@ -355,13 +368,22 @@
             
             chart.updateSeries(newSeries);
             
-            // データ切り替え後も初期表示範囲を適用
-            setTimeout(() => {
-                const visibleRange = getVisibleRange();
-                if (totalDays > visibleRange) {
-                    chart.zoomX(0, visibleRange - 1);
+            // データ切り替え後も表示範囲を再設定
+            const visibleRange = getVisibleRange();
+            chart.updateOptions({
+                xaxis: {
+                    min: 0,
+                    max: visibleRange - 1,
+                    title: {
+                        text: 'Day',
+                        style: {
+                            color: '#fff',
+                            fontSize: '14px',
+                            fontWeight: 500
+                        }
+                    }
                 }
-            }, 100);
+            });
         }
         
         // ページ読み込み時にチャートを初期化
