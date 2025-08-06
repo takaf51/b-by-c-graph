@@ -22,6 +22,7 @@
         .graph_container {
             max-width: 100%;
             margin: 0 auto;
+            padding: 0 20px;
         }
         
         .graph_header {
@@ -38,7 +39,7 @@
         .graph_chart_container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            padding: 10px 0px;
+            padding: 20px 10px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
@@ -59,7 +60,7 @@
         
         @media (max-width: 480px) {
             .graph_container {
-                padding: 0 5px;
+                padding: 0 10px;
             }
             
             .graph_header h1 {
@@ -78,6 +79,10 @@
 </head>
 <body>
     <div class="graph_container">
+        <div class="graph_header">
+            <h1>美容データ トラッキング</h1>
+        </div>
+        
         <div class="graph_chart_container">
             <div id="graph_chart"></div>
         </div>
@@ -211,9 +216,9 @@
                     borderColor: '#535A6C',
                     strokeDashArray: 3,
                     padding: {
-                        left: 0,
-                        right: 0,
-                        top: 0,
+                        left: 20,
+                        right: 20,
+                        top: 10,
                         bottom: 0
                     }
                 },
@@ -290,7 +295,7 @@
         
         // ページ読み込み時にデフォルトデータでチャートを初期化
         document.addEventListener('DOMContentLoaded', function() {
-            initChart(defaultData, 7, 'all');
+            initChart(defaultData, 10, 'all');
         });
         
         // 使用例（コンソールで実行可能）
