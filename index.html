@@ -69,14 +69,23 @@
         .chart-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            padding: 20px 10px;
+            padding: 10px 0px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
         }
         
         #chart {
             width: 100%;
             height: 400px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* ApexChartsの内部マージンを強制的に削除 */
+        #chart .apexcharts-canvas {
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
         @media (max-width: 480px) {
@@ -116,7 +125,7 @@
         <div class="controls">
             <button class="control-btn active" onclick="showData('all')">全部表示</button>
             <button class="control-btn" onclick="showData('v')">V点のみ</button>
-            <button class="control-btn" onclick="showData('d')">D点のみ</button>
+            <button class="control-btn" onclick="showData('vd')">V点とD点</button>
         </div>
         
         <div class="chart-container">
@@ -129,13 +138,13 @@
         const allData = {
             dPoint: [244.7, 251.1, 248.5, 250.2, 255.3, 252.4],
             vPoint: [74.1, 77.9, 80.3, 78.6, 79.6, 78.5],
-            wrinkles: [8849.0, 8495.9, 12064.0, 12727.5, 6200.7, 9336.0]
+            wrinkles: [88.49, 84.959, 120.64, 127.275, 62.007, 93.36]  // 100で割った値
         };
         
         // 日数を設定（データがない日も含めて表示）
         const totalDays = 10;
         
-        // X軸のカテゴリを生成（数字のみ）
+        // X軸のカテゴリを生成（1から開始）
         function generateDays(count) {
             return Array.from({length: count}, (_, i) => i + 1);
         }
@@ -186,14 +195,28 @@
                         show: false
                     },
                     zoom: {
-                        enabled: true,
-                        type: 'x',
-                        autoScaleYaxis: true
+                        enabled: false
                     },
                     pan: {
                         enabled: true,
                         type: 'x'
+                    },
+                    offsetX: 0,
+                    offsetY: 0,
+                    parentHeightOffset: 0,
+                    sparkline: {
+                        enabled: false
                     }
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            position: 'top'
+                        }
+                    }
+                },
+                fill: {
+                    type: 'solid'
                 },
                 theme: {
                     mode: 'dark'
@@ -217,7 +240,13 @@
                 },
                 grid: {
                     borderColor: '#535A6C',
-                    strokeDashArray: 3
+                    strokeDashArray: 3,
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0
+                    }
                 },
                 xaxis: {
                     categories: generateDays(totalDays),
@@ -232,40 +261,31 @@
                     labels: {
                         style: {
                             colors: '#fff'
+                        },
+                        formatter: function (val) {
+                            return Math.floor(val);
                         }
                     },
-                    min: 0,
-                    max: getVisibleRange() - 1
+                    min: 1,
+                    max: getVisibleRange(),
+                    tickAmount: getVisibleRange() - 1,
+                    axisBorder: {
+                        show: true,
+                        color: '#535A6C'
+                    },
+                    axisTicks: {
+                        show: true,
+                        color: '#535A6C'
+                    },
+                    type: 'numeric',
+                    forceNiceScale: false,
+                    decimalsInFloat: 0
                 },
-                yaxis: [
-                    {
-                        title: {
-                            text: 'D点・V点',
-                            style: {
-                                color: '#fff'
-                            }
-                        },
-                        labels: {
-                            style: {
-                                colors: '#fff'
-                            }
-                        }
-                    },
-                    {
-                        opposite: true,
-                        title: {
-                            text: 'ほうれい線',
-                            style: {
-                                color: '#fff'
-                            }
-                        },
-                        labels: {
-                            style: {
-                                colors: '#fff'
-                            }
-                        }
+                yaxis: {
+                    labels: {
+                        show: false
                     }
-                ],
+                },
                 legend: {
                     labels: {
                         colors: '#fff'
@@ -300,8 +320,17 @@
                             enabled: false
                         },
                         xaxis: {
-                            min: 0,
-                            max: 4,  // モバイルでは5日分表示 (0-4)
+                            min: 1,
+                            max: 5,  // モバイルでは5日分表示 (1-5)
+                            tickAmount: 4,
+                            type: 'numeric',
+                            forceNiceScale: false,
+                            decimalsInFloat: 0,
+                            labels: {
+                                formatter: function (val) {
+                                    return Math.floor(val);
+                                }
+                            },
                             title: {
                                 text: 'Day',
                                 style: {
@@ -337,12 +366,19 @@
                         color: '#FEB019'
                     }];
                     break;
-                case 'd':
-                    newSeries = [{
-                        name: "フェイスライン（D点）",
-                        data: adjustDataLength(allData.dPoint, totalDays),
-                        color: '#00E396'
-                    }];
+                case 'vd':
+                    newSeries = [
+                        {
+                            name: "フェイスライン（D点）",
+                            data: adjustDataLength(allData.dPoint, totalDays),
+                            color: '#00E396'
+                        },
+                        {
+                            name: "たるみ度合い（V点）",
+                            data: adjustDataLength(allData.vPoint, totalDays),
+                            color: '#FEB019'
+                        }
+                    ];
                     break;
                 case 'all':
                 default:
@@ -372,8 +408,17 @@
             const visibleRange = getVisibleRange();
             chart.updateOptions({
                 xaxis: {
-                    min: 0,
-                    max: visibleRange - 1,
+                    min: 1,
+                    max: visibleRange,
+                    tickAmount: visibleRange - 1,
+                    type: 'numeric',
+                    forceNiceScale: false,
+                    decimalsInFloat: 0,
+                    labels: {
+                        formatter: function (val) {
+                            return Math.floor(val);
+                        }
+                    },
                     title: {
                         text: 'Day',
                         style: {
