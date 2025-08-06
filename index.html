@@ -21,7 +21,7 @@
         
         .graph_container {
             max-width: 100%;
-            margin: 0 20;
+            margin: 0 auto;
         }
         
         .graph_header {
@@ -230,9 +230,6 @@
                     labels: {
                         style: {
                             colors: '#fff'
-                        },
-                        formatter: function (val) {
-                            return Math.floor(val);
                         }
                     },
                     axisBorder: {
@@ -243,9 +240,7 @@
                         show: true,
                         color: '#535A6C'
                     },
-                    type: 'numeric',
-                    forceNiceScale: false,
-                    decimalsInFloat: 0
+                    type: 'category'
                 },
                 yaxis: {
                     labels: {
@@ -295,7 +290,7 @@
         
         // ページ読み込み時にデフォルトデータでチャートを初期化
         document.addEventListener('DOMContentLoaded', function() {
-            initChart(defaultData, 7, 'v');
+            initChart(defaultData, 10, 'all');
         });
         
         // 使用例（コンソールで実行可能）
