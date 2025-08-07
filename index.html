@@ -81,9 +81,8 @@
         
         // X軸のカテゴリを生成（1から開始）
         function generateDays(count) {
-            xAxis = Array.from({length: count}, (_, i) => i + 1);
-            xAxis.unshift("B");
-            return xAxis;
+            const days = Array.from({length: count}, (_, i) => i + 1);
+            return ["B", ...days]; 
         }
         
         // データを指定された日数に合わせて調整
