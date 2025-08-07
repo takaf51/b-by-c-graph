@@ -81,7 +81,7 @@
         
         // X軸のカテゴリを生成（1から開始）
         function generateDays(count) {
-            return Array.from({length: count}, (_, i) => i + 1);
+            return Array.from({length: count}, (_, i) => i + 1).unshift("B");
         }
         
         // データを指定された日数に合わせて調整
