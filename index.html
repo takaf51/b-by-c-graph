@@ -100,6 +100,8 @@
             if (chart) {
                 chart.destroy();
             }
+
+            days += 1;
             
             // 表示するシリーズを決定
             let series = [];
@@ -205,7 +207,7 @@
                     }
                 },
                 xaxis: {
-                    categories: generateDays(days + 1),
+                    categories: generateDays(days),
                     title: {
                         text: 'Day',
                         style: {
