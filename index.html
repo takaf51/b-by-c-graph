@@ -81,7 +81,7 @@
         
         // X軸のカテゴリを生成（Bから開始）
         function generateDays(count) {
-            const days = Array.from({length: count + 1}, (_, i) => i + 1);
+            const days = Array.from({length: count}, (_, i) => i + 1);
             return ["B", ...days]; 
         }
         
@@ -205,7 +205,7 @@
                     }
                 },
                 xaxis: {
-                    categories: generateDays(days),
+                    categories: generateDays(days + 1),
                     title: {
                         text: 'Day',
                         style: {
